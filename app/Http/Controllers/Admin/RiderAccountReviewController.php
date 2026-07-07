@@ -38,9 +38,16 @@ class RiderAccountReviewController extends Controller
         // If each rider has only one review record
         $userRider = $rider->userRiders->first();
 
-        $rider->review_status_text = $userRider
-            ? UserRider::$REVIEW_STATUS[$userRider->review_status] ?? null
-            : null;
+        // $rider->review_status_text = $userRider
+        //     ? UserRider::$REVIEW_STATUS[$userRider->review_status] ?? null
+        //     : null;   
+
+            $rider->review_status = $userRider
+            ? $userRider->review_status?? null
+            : null;  
+            
+           
+
 
         return Inertia::render('riders/account-review-details', [
             'rider' => $rider

@@ -17,6 +17,8 @@ class ReceiverInformationResource extends JsonResource
         return [
             'name' => $this->receiver_name,
             'receiver_phone' => $this->receiver_phone,
+            'country_code' => $this->country_code,
+            'country' => $this->country,
         ];
     }
 }

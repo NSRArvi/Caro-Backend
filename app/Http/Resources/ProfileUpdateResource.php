@@ -19,6 +19,8 @@ class ProfileUpdateResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'phone_number' => $this?->phone_number,
+            'country_code' => $this?->country_code,
+            'country' => $this?->country,
             'profile_image' => $this?->profile_image,
             'dob' => $this->dob,
             'gender' => $this->gender,

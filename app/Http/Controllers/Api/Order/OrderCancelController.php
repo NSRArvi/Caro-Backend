@@ -59,15 +59,17 @@ class OrderCancelController extends Controller
                     ->value('device_token');
 
                 // Notify rider
-                app(FcmService::class)->sendToDevice(
-                    $riderToken,
-                    'Bid Cancelled ❌',
-                    'The customer has cancelled your bid. Check other available orders.',
-                    'bid_cancelled',
-                    [
-                        'order_id'   => 'test',
-                    ]
-                );
+                if ($riderToken) {
+                    app(FcmService::class)->sendToDevice(
+                        $riderToken,
+                        'Order Cancelled ❌',
+                        'The customer has cancelled the order. Please check your orders.',
+                        'order_cancelled',
+                        [
+                            'order_id'   => $order->order_unique_id,
+                        ]
+                    );
+                }
            // }
             return sendResponse(true, 'Successfully Order Has Cancelled.');
 

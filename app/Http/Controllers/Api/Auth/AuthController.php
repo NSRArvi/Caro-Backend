@@ -42,7 +42,14 @@ class AuthController extends Controller
                 'otp_type' => OtpVerify::$OTP_TYPE['account_verify'],
             ]);
            // event(new OtpGenerated(1251)); // Dispatch event
-            Mail::to($otp->email)->send(new OtpMail($otp->otp_code));
+           $mailData =  [
+                'otp' => $otp->otp_code,
+                'userName' => auth()->user()?->name,
+                'purpose' =>  'Account Verification',
+                'action' =>  'Authentication',
+                'validityMinutes' =>  3,
+            ];
+            Mail::to($otp->email)->send(new OtpMail($mailData));
 
 
 

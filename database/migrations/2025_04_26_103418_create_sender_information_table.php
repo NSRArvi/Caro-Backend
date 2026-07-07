@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('order_id');
             $table->string('sender_name');
             $table->string('sender_phone');
+            $table->string('country_code')->nullable();
+            $table->string('country')->nullable();
             $table->string('remarks')->nullable();
             $table->timestamps();
 

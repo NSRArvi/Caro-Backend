@@ -10,6 +10,8 @@ class SenderInformation extends Model
         'order_id',
         'sender_name',
         'sender_phone',
+        'country_code',
+        'country',
         'remarks',
     ];
 }

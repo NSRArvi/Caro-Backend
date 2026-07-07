@@ -94,11 +94,15 @@ public function internationalOrderRequest(Request $request)
                 $senderName = $request->input('sender_information.name');
                 $senderPhone = $request->input('sender_information.phone_number');
                 $senderRemarks = $request->input('sender_information.remarks');
+                $country_code = $request->input('sender_information.country_code');
+                $country = $request->input('sender_information.country');
 
                 $orderRequest->senderInformation()->create([
                     'sender_name' => $senderName,
                     'sender_phone' => $senderPhone,
                     'remarks' => $senderRemarks,
+                    'country_code' => $country_code,
+                    'country' => $country,
                 ]);
             }
 
@@ -108,6 +112,8 @@ public function internationalOrderRequest(Request $request)
                     'receiver_name' => $request->input('receiver_information.name'),
                     'receiver_phone' => $request->input('receiver_information.phone_number'),
                     'remarks' => $request->input('receiver_information.remarks'),
+                    'country_code' => $request->input('receiver_information.country_code'),
+                    'country' => $request->input('receiver_information.country'),
                 ]);
             }
 

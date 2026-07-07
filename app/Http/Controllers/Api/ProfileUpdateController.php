@@ -36,6 +36,8 @@ class ProfileUpdateController extends Controller
             'gender' => 'required',
             'dob' => 'required',
             'phone_number' => 'required',
+            'country_code' => 'required',
+            'country' => 'required',
         ]);
         try {
              $user = Auth::user();
@@ -57,6 +59,8 @@ class ProfileUpdateController extends Controller
                 'dob' => $request->dob,
                 'gender' => $request->gender,
                 'status' => User::$status['active'],
+                'country_code' => $request->country_code,
+                'country' => $request->country,
             ]);
 
 

@@ -16,9 +16,10 @@ return new class extends Migration
             $table->foreignId('order_id');
             $table->string('receiver_name');
             $table->string('receiver_phone');
+            $table->string('country_code')->nullable();
+            $table->string('country')->nullable();
             $table->string('remarks')->nullable();
             $table->timestamps();
-
             $table->softDeletes();
         });
     }

@@ -11,6 +11,8 @@ class ReceiverInformation extends Model
         'order_id',
         'receiver_name',
         'receiver_phone',
+        'country_code',
+        'country',
         'remarks',
     ];
 }

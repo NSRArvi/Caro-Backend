@@ -129,6 +129,8 @@ class OrderRequestController extends Controller
                     $senderName = $request->input('sender_information.name');
                     $senderPhone = $request->input('sender_information.phone_number');
                     $senderRemarks = $request->input('sender_information.remarks');
+                    $country_code = $request->input('sender_information.country_code');
+                    $country = $request->input('sender_information.country');
 
                     // Check if matching user exists
 //                    $userExists = auth()->user()->where('name', $senderName)
@@ -141,6 +143,8 @@ class OrderRequestController extends Controller
                             'sender_name' => $senderName,
                             'sender_phone' => $senderPhone,
                             'remarks' => $senderRemarks,
+                            'country_code' => $country_code,
+                            'country' => $country,
                         ]);
                    // }
                 }
@@ -150,6 +154,8 @@ class OrderRequestController extends Controller
                         'receiver_name' => $request->input('receiver_information.name'),
                         'receiver_phone' => $request->input('receiver_information.phone_number'),
                         'remarks' => $request->input('receiver_information.remarks'),
+                        'country_code' => $request->input('receiver_information.country_code'),
+                        'country' => $request->input('receiver_information.country'),
                     ]);
                 }
 
@@ -173,13 +179,16 @@ class OrderRequestController extends Controller
                 ->toArray();  // ← must be array
 
             // Send
-            app(FcmService::class)->sendToMultiple(
-                $tokens,
-                'New Order Created 🛒',
-                'A new order has been created. Please check the app for details.',
-                'new_order_created',   // type
-                ['order_id' => $orderRequest?->order_unique_id]  // extra data
-            );
+            if (!empty($tokens)) {
+                app(FcmService::class)->sendToMultiple(
+                    $tokens,
+                    'New Order Created 🛒',
+                    'A new order has been created. Please check the app for details.',
+                    'new_order_created',   // type
+                    ['order_id' => $orderRequest?->order_unique_id]  // extra data
+                );
+            }
+
             });
 
             return sendResponse(success: true, message: 'Successfully send order request');
@@ -352,7 +361,15 @@ class OrderRequestController extends Controller
                 'otp_type' => OtpVerify::$OTP_TYPE[$otpType],
             ]);
             // event(new OtpGenerated(1251)); // Dispatch event
-            Mail::to($order?->customer->email)->send(new OtpMail($otp->otp_code));
+            $mailData = [
+                'otp' => $otp->otp_code,
+                'userName' => $order?->customer?->name,
+                'purpose' =>  ucfirst($otpType) . ' OTP',
+                'action' =>  ucfirst($otpType),
+                'validityMinutes' =>  3,
+            ];
+            
+            Mail::to($order?->customer->email)->send(new OtpMail($mailData));
 
             return sendResponse(true, 'OTP picked send successfully.');
         }catch (CustomException $e){
@@ -437,7 +454,7 @@ class OrderRequestController extends Controller
                 app(FcmService::class)->sendToDevice(
                     $token,
                     "Order {$orderStatus} ✅",
-                    "Your parcel have been {$orderStatus} successfully!",
+                    "Your parcel have been delivered successfully!",
                     'order_details', // dynamic type
                     [
                         'order_id' => $orderUniqueId,  // ← use real order id

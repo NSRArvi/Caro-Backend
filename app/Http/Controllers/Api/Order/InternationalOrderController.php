@@ -135,13 +135,15 @@ public function internationalOrderRequest(Request $request)
                 ->pluck('device_token')
                 ->toArray();
 
-            app(FcmService::class)->sendToMultiple(
-                $tokens,
-                'New Order Created 🛒',
-                'A new order has been created. Please check the app for details.',
-                'new_order_created',
-                ['order_id' => $orderRequest?->order_unique_id]
-            );
+            if (!empty($tokens)) {
+                app(FcmService::class)->sendToMultiple(
+                    $tokens,
+                    'New Order Created 🛒',
+                    'A new order has been created. Please check the app for details.',
+                    'new_order_created',   // type
+                    ['order_id' => $orderRequest?->order_unique_id]  // extra data
+                );
+            }
         });
 
         return sendResponse(success: true, message: 'Successfully send order request');

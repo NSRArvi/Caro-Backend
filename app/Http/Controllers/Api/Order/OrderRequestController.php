@@ -446,7 +446,7 @@ class OrderRequestController extends Controller
                     'transaction_type' => WalletHistory::$TRANSACTION_TYPE ['credit'],
                 ]);
                 // send notification
-                $orderStatus = Order::$ORDER_STATUS[$otpType];
+                $orderStatus = Order::$ORDER_STATUS_NAME[$otpType];
 
                 $token = DeviceToken::where('user_id', $order->customer_id)
                     ->value('device_token');

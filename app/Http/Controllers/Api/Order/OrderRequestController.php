@@ -448,14 +448,15 @@ class OrderRequestController extends Controller
                     'transaction_type' => WalletHistory::$TRANSACTION_TYPE ['credit'],
                 ]);
                 // send notification
-                $orderStatus = Order::$ORDER_STATUS_NAME[$otpType];
 
-                $token = DeviceToken::where('user_id', $order->customer_id)
+                $token = DeviceToken::where('user_id', $order?->customer_id)
                     ->value('device_token');
+                Log::info('Customer Device Token: ', ['device_token' => $token]);    
+
 
                 app(FcmService::class)->sendToDevice(
                     $token,
-                    "Order {$orderStatus} ✅",
+                    "Order Delivered ✅",
                     "Your parcel have been delivered successfully!",
                     'order_details', // dynamic type
                     [

@@ -247,7 +247,7 @@
     <div class="email-container">
         <!-- Header -->
         <div class="email-header">
-            <h1 class="app-name">TheCaro</h1>
+            <h1 class="app-name">The Caro</h1>
             <p class="tagline">Secure Authentication</p>
         </div>
         
@@ -261,13 +261,13 @@
                 We received a request to verify your identity. Use the code below to complete your {{ $action ?? 'authentication' }}.
             </p>
             
-            <!-- Purpose Section -->
+            {{-- <!-- Purpose Section -->
             <div class="purpose-section">
                 <span class="purpose-label">Purpose</span>
                 <p class="purpose-text">
                     {{ $purpose ?? 'Account Verification' }}
                 </p>
-            </div>
+            </div> --}}
             
             <!-- OTP Code -->
             <div class="otp-section">

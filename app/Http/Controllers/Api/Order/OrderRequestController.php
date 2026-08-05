@@ -429,7 +429,6 @@ class OrderRequestController extends Controller
 
            // });
             if($otpType == 'delivered'){
-                Log::info('Order Delivered: ', ['order_id' => $orderUniqueId, 'rider_id' => auth()->id()]);
                 $bidAmount = $order?->bid?->bid_amount;
                 $pricingRate = PricingRate::where('type', $order->order_type)->first();
                 $netFare = abs($bidAmount);
@@ -450,8 +449,7 @@ class OrderRequestController extends Controller
                 // send notification
 
                 $token = DeviceToken::where('user_id', $order?->customer_id)
-                    ->value('device_token');
-                Log::info('Customer Device Token: ', ['device_token' => $token]);    
+                    ->value('device_token');  
 
 
                 app(FcmService::class)->sendToDevice(
@@ -463,8 +461,6 @@ class OrderRequestController extends Controller
                         'order_id' => $orderUniqueId,  // ← use real order id
                     ]
                 );
-
-                Log::info('Notification sent to customer: ', ['order_id' => $orderUniqueId, 'customer_id' => $order->customer_id, 'device_token' => $token]);
                 
             }
             return sendResponse(success: true, message: "OTP {$otpType} send successfully.");

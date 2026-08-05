@@ -38,6 +38,7 @@ class ProfileUpdateController extends Controller
             'phone_number' => 'required',
             'country_code' => 'required',
             'country' => 'required',
+            'profile_image'  => 'nullable|image|mimes:jpg,jpeg,png|max:10240',
         ]);
         try {
              $user = Auth::user();

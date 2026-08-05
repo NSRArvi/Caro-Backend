@@ -19,9 +19,14 @@ class ProfileUpdateResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'phone_number' => $this?->phone_number,
+            'country_code' => $this?->country_code,
+            'country' => $this?->country,
             'profile_image' => $this?->profile_image,
-            'dod' => $this->dod,
+            'dob' => $this->dob,
+            'gender' => $this->gender,
             'status' => array_search($this->status, User::$status) ?? 'unknown', // Convert integer to string
+            'role' => $this->getRoleNames()->toArray(),
+            //'rider_bank_information' => RiderBankInformationResource::collection($this->riderBankInformations),
         ];
     }
 }

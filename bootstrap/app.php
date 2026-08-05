@@ -24,7 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->encryptCookies(except: ['appearance']);
+        //$middleware->encryptCookies(except: ['appearance']);
+        $middleware->validateCsrfTokens(except: [
+            'api/*',
+        ]);
 
         $middleware->web(append: [
             HandleAppearance::class,
@@ -79,16 +82,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // Handle Validation Errors (422)
         $exceptions->render(function (\Illuminate\Validation\ValidationException $e, Request $request) {
             if ($request->is('api/*')) {
+                $errors = collect($e->errors())->flatten()->toArray();
                 return response()->json([
-                    'success' => 'false',
-                    'message' =>  implode(
-                        ',',
-                        collect($e->errors())
-                            ->flatten()
-                            ->toArray()
-                    ),
+                    'success' => false,
+                    'message' =>implode(', ', $errors),
                     'data' => null,
-                    'errors' => $e->errors(), // This will return the validation errors
+                    'errors' => $e->errors() // This will return the validation errors
                 ], 422);
             }
         });

@@ -1,12 +1,15 @@
 /.phpunit.cache
 /bootstrap/ssr
 /node_modules
-/public/build
+#/public/build
 /public/hot
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/app/public
+storage/app/firebase/firebase_credentials.json
 /vendor
+firebase-credentials.json
 .env
 .env.backup
 .env.production
@@ -22,3 +25,4 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+

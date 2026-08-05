@@ -13,9 +13,13 @@ return new class extends Migration
     {
         Schema::create('user_riders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id');
-            $table->tinyInteger('document_type');
-            $table->string('document_file');
+            $table->string('user_id', 30);
+            $table->string('document_type');
+            $table->string('document_number')->nullable();
+            $table->string('document');
+            $table->tinyInteger('review_status')->default(1); // pending, accepted, cancel
+            $table->string('remarks')->nullable(); // if cancel with the reason the request
+            $table->softDeletes();
             $table->timestamps();
         });
     }

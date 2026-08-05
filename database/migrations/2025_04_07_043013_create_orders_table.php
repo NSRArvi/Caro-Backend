@@ -1,0 +1,45 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('orders', function (Blueprint $table) {
+            $table->id();
+            $table->string('order_unique_id');
+            $table->foreignId('rider_id')->nullable();
+            $table->foreignId('customer_id');
+            $table->foreignId('package_id');
+            $table->tinyInteger('order_type')->default(1); // order types are national, international
+            $table->string('pickup_latitude');
+            $table->string('pickup_longitude');
+            $table->string('drop_latitude');
+            $table->string('drop_longitude');
+            $table->float('weight');
+            $table->float('pickup_radius')->default(1.0); // in kilometers
+            $table->tinyInteger('status')->default(1); // pending, confirmed, picked_up, delivered, canceled
+            $table->tinyInteger('payment_status')->default(1); // unpaid, paid
+            $table->timestamps();
+            $table->softDeletes();
+
+            $table->foreign('rider_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('customer_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('package_id')->references('id')->on('packages')->onDelete('cascade');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('orders');
+    }
+};

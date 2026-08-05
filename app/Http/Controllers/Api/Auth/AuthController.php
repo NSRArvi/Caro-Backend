@@ -5,53 +5,59 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Events\OtpGenerated;
 use App\Exceptions\CustomException;
 use App\Http\Controllers\Controller;
+use App\Mail\OtpMail;
+use App\Models\DeviceToken;
 use App\Models\OtpVerify;
 use App\Models\User;
+use App\Models\Wallet;
 use App\Services\Auth\MakeVerificationCodeService;
+use App\Services\Files\FileService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    public function __construct(public MakeVerificationCodeService $makeVerificationCodeService)
+    public function __construct(
+        public MakeVerificationCodeService $makeVerificationCodeService,
+        protected FileService $fileService,
+      )
     {
 
     }
-    public function sendEmailOtp($email)
+    public function sendEmailOtp(Request $request)
     {
+
+        $request->validate([
+            'email' => 'required|email',
+        ]);
         try {
              $otp = OtpVerify::create([
-                'email' => $email,
+                'email' => $request->email,
                 'otp_code' => rand(1000, 9999),
                 'otp_expires_at' => now()->addMinutes(3),
-                'otp_type' => "phone_number",
+                'sender_type' => 'email',
+                'otp_type' => OtpVerify::$OTP_TYPE['account_verify'],
             ]);
-            event(new OtpGenerated(1251)); // Dispatch event
+           // event(new OtpGenerated(1251)); // Dispatch event
+           $mailData =  [
+                'otp' => $otp->otp_code,
+                'userName' => auth()->user()?->name,
+                'purpose' =>  'Account Verification',
+                'action' =>  'Authentication',
+                'validityMinutes' =>  3,
+            ];
+            Mail::to($otp->email)->send(new OtpMail($mailData));
+
+
+
+
             return sendResponse(true, 'OTP Send successfully.');
         }catch (CustomException $e){
             return $e->getMessage();
         }
-
-
-
-
-//        $user = User::create([
-//            'name' => $request->name,
-//            'email' => $request->email,
-//            'password' => bcrypt($request->password),
-//            'verification_code' => $this->makeVerificationCodeService->makeEmailVerificationCode(),
-//            'email_verification_token' => Str::random(40),
-//        ]);
-
-//        event(new UserRegisteredEvent($otp)); // Dispatch event
-//
-//        return sendResponse(true, 'User registered successfully.', [
-//            'token' => $user->createToken('auth_token')->plainTextToken,
-//            'user' => $user
-//        ]);
-
     }
     public function verifyOtp(Request $request)
     {
@@ -65,43 +71,80 @@ class AuthController extends Controller
         if (!$otpCode || $otpCode->otp_code !== $request->otp_code || Carbon::now()->gt($otpCode->otp_expires_at)) {
             return sendResponse(false, 'Invalid or expired OTP.', null,401);
         }
-
-        // Clear OTP after successful verification
-
-//        $otpCode->otp_code = null;
-//        $otpCode->otp_expires_at = null;
-//        $otpCode->verified_at = now();
-//        $otpCode->save();
-//        return 'ok';
-       // $otpCode->delete();
-
-        // Generate Sanctum token
-        $user = User::create([
-            'name' => 'test',
-            'email' => $otpCode->email,
-            'status' => User::$status['active'],
-        ]);
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return sendResponse(true, 'OTP Verified successfully.', ["token" => $token]);
-    }
-
-    public function login(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
         try {
-            $user = User::where('email', $request->email)->firstOrFail();
+            // clear otp
+            $otpCode->delete();
+            // email check
+            $exitsUser = User::where('email', $request->email)->first();
 
-            if (!$user || !Hash::check($request->password, $user->password)) {
-                throw new CustomException('Password Not Matched',  404);
+            if(!$exitsUser){
+                $user = User::create([
+                    'email' => $request->email,
+                    'status' => 1,
+                ]);
+                // Create wallet only if it doesn't exist
+                Wallet::firstOrCreate(
+                    ['user_id' => $user->id], // condition
+                    ['balance' => 0]          // defaults if creating new
+                );
+                $exitsUser = $user;
+                $user->assignRole('user');
+
+
             }
-            return sendResponse(true, 'Login Successfully', ['token' => $user->createToken('auth_token')->plainTextToken]);
-        }catch (\Exception $exception){
-            return sendResponse(false, 'Something Went Wrong', $exception->getCode());
+            $token = $exitsUser->createToken('auth_token')->plainTextToken;
+            DeviceToken::updateOrCreate(
+                [
+                    'user_id' => $exitsUser->id,
+                    'device_type' => 'android'
+                ],
+                [
+                    'device_token' => $request->get('device_token'),
+                ]
+            );
+
+            return sendResponse(true, 'OTP Verified successfully.', ["token" => $token, "status" => User::$statusName[$exitsUser?->status], 'user_id'=> $exitsUser->id, 'role' => $exitsUser->getRoleNames()->toArray()]);
+        }catch (CustomException $e){
+            return $e->getCode();
         }
 
+    }
+    public function socialLogin(Request $request)
+    {
+        $user = User::where('email', $request->email)->first();
+        // if not have existing user then user will create
+        if(!$user) {
+            $fileName = $this->fileService->sliceFileUrl($user?->profile_image);
+            $request->validate([
+                'email' => 'required|string|email|unique:users,email',
+                'user_type' => 'required|string|in:user,rider',
+                'dob' => 'required|string',
+                'gender' => 'required|string',
+                'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
+            ]);
+            // if profile image not null
+        }
+        try {
+            if (!$user){
+                if ($request->hasFile('profile_image')) {
+                    // store profile image using service class
+                    $fileName = $this->fileService->uploadFile($request->file('profile_image'), 'user');
+                }
+                $user = User::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'profile_image' => $fileName,
+                    'dob' => $request->dob,
+                    'gender' => $request->gender,
+                    'user_type' => User::$userType[$request?->user_type],
+                    'status' => User::$status['active'],
+                ]);
+                $user->assignRole('user');
+            }
+            $token = $user->createToken('auth_token')->plainTextToken;
+            return sendResponse(true, 'Login Successful.', ["token" => $token, "status" => User::$statusName[$user?->status], 'role' => $user->getRoleNames()->toArray()]);
+        }catch (\Exception $e){
+            return sendResponse(false, $e->getMessage(), null, 500);
+        }
     }
 }

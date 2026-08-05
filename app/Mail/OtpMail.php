@@ -11,17 +11,16 @@ use Illuminate\Queue\SerializesModels;
 
 class OtpMail extends Mailable
 {
-    public $otp;
+    public $mailData;
 
-    public function __construct($otp)
+    public function __construct($mailData)
     {
-        $this->otp = $otp;
+        $this->mailData = $mailData;
     }
-
     public function build()
     {
         return $this->subject('Your OTP Code test')
             ->view('mail.otp')
-            ->with(['otp' =>11111]);
+            ->with($this->mailData);
     }
 }

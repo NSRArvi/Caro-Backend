@@ -34,9 +34,12 @@ class AuthController extends Controller
             'email' => 'required|email',
         ]);
         try {
+            // Check if the email matches the bypass condition
+             $otpCode = ($request->email === 'caro@example.com') ? 1234 : rand(1000, 9999);
              $otp = OtpVerify::create([
                 'email' => $request->email,
-                'otp_code' => rand(1000, 9999),
+                // 'otp_code' => rand(1000, 9999),
+                'otp_code' => $otpCode,
                 'otp_expires_at' => now()->addMinutes(3),
                 'sender_type' => 'email',
                 'otp_type' => OtpVerify::$OTP_TYPE['account_verify'],
@@ -79,8 +82,11 @@ class AuthController extends Controller
             // clear otp
             $otpCode->delete();
             // email check
-            $exitsUser = User::where('email', $request->email)->first();
-
+            // $exitsUser = User::where('email', $request->email)->first();
+            $exitsUser = User::withTrashed()->where('email', $request->email)->first();
+            if ($exitsUser && $exitsUser->deleted_at){
+                return sendResponse(false, 'Your account has been archived. Please contact caro support team.', null, 401);
+            }
             if(!$exitsUser){
                 $user = User::create([
                     'email' => $request->email,

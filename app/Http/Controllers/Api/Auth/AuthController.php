@@ -64,10 +64,14 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|string|email',
             'otp_code' => 'required|digits:4',
+            'device_token' => 'required|string',
         ]);
 
        $otpCode = OtpVerify::where('email', $request->email)->where('otp_code', $request->otp_code)->first();
 
+       if(!$otpCode){
+            return sendResponse(false, 'Invalid OTP.', null, 401);
+        }
         if (!$otpCode || $otpCode->otp_code !== $request->otp_code || Carbon::now()->gt($otpCode->otp_expires_at)) {
             return sendResponse(false, 'Invalid or expired OTP.', null,401);
         }
@@ -93,19 +97,22 @@ class AuthController extends Controller
 
             }
             $token = $exitsUser->createToken('auth_token')->plainTextToken;
-            DeviceToken::updateOrCreate(
-                [
-                    'user_id' => $exitsUser->id,
-                    'device_type' => 'android'
-                ],
-                [
-                    'device_token' => $request->get('device_token'),
-                ]
-            );
+
+            if ($request->filled('device_token')) {
+                DeviceToken::updateOrCreate(
+                    [
+                        'user_id' => $exitsUser->id,
+                        'device_type' => 'android',
+                    ],
+                    [
+                        'device_token' => $request->device_token,
+                    ]
+                );
+            }
 
             return sendResponse(true, 'OTP Verified successfully.', ["token" => $token, "status" => User::$statusName[$exitsUser?->status], 'user_id'=> $exitsUser->id, 'role' => $exitsUser->getRoleNames()->toArray()]);
         }catch (CustomException $e){
-            return $e->getCode();
+            return sendResponse(false, 'Something went wrong.', null, 500);
         }
 
     }

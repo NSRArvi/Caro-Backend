@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\Order\InternationalOrderController;
 use App\Http\Controllers\Api\Order\OrderManageController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Api\Rider\BankInformationController;
+use App\Http\Controllers\Api\Rider\RiderAccountController;
 
 Route::middleware(['json.response'])->prefix('/v1')->group(function() {
     Route::post('/send/email/otp', [AuthController::class, 'sendEmailOtp']);
@@ -92,6 +93,11 @@ Route::middleware(['json.response'])->prefix('/v1')->group(function() {
             Route::get('order/verify/{order_id}/{otp_type}/{otp_code}', [OrderRequestController::class, 'riderOrderOtpVerify']);
             // cancel order
             Route::post('order/cancel/{order_id}', [OrderCancelController::class, 'riderOrderCancel']);
+
+            // Rider soft delete endpoints (data is retained in database with deleted_at timestamp)
+            Route::delete('/delete-account', [RiderAccountController::class, 'deleteAccount']);
+            Route::delete('/delete/{id?}', [RiderAccountController::class, 'destroy']);
+            Route::post('/restore/{id}', [RiderAccountController::class, 'restore']);
 
         });
         Route::prefix('/orders')->group(function () {

@@ -79,7 +79,8 @@ class AuthController extends Controller
        if(!$otpCode){
             return sendResponse(false, 'Invalid OTP.', null, 401);
         }
-        if (!$otpCode || $otpCode->otp_code !== $request->otp_code || Carbon::now()->gt($otpCode->otp_expires_at)) {
+        if (!$otpCode || $otpCode->otp_code != $request->otp_code || \Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($otpCode->otp_expires_at))) {
+        // if (!$otpCode || $otpCode->otp_code !== $request->otp_code || Carbon::now()->gt($otpCode->otp_expires_at)) {
             return sendResponse(false, 'Invalid or expired OTP.', null,401);
         }
         try {

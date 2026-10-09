@@ -74,13 +74,12 @@ class AuthController extends Controller
             'device_token' => 'required|string',
         ]);
 
-       $otpCode = OtpVerify::where('email', $request->email)->where('otp_code', $request->otp_code)->first();
+       $otpCode = OtpVerify::where('email', $request->email)->latest()->first();
 
-       if(!$otpCode){
+       if(!$otpCode || $otpCode->otp_code != $request->otp_code){
             return sendResponse(false, 'Invalid OTP.', null, 401);
         }
-        if (!$otpCode || $otpCode->otp_code != $request->otp_code || \Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($otpCode->otp_expires_at))) {
-        // if (!$otpCode || $otpCode->otp_code !== $request->otp_code || Carbon::now()->gt($otpCode->otp_expires_at)) {
+        if (\Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($otpCode->otp_expires_at))) {
             return sendResponse(false, 'Invalid or expired OTP.', null,401);
         }
         try {
